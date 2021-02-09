@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package helloworld;
+
+option java_multiple_files = true;
+
+service HelloWorldService {
+  rpc HelloWorldStream (stream HelloWorldData) returns (stream HelloWorldData) {}
+}
+
+message HelloWorldData {
+  bytes message = 1; // e.g. json data or whatever we want to send/receive
+}
