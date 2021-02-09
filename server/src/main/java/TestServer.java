@@ -12,6 +12,8 @@ public class TestServer {
 			.addService(new HelloWorldServiceGrpc.HelloWorldServiceImplBase() {
 				@Override
 				public StreamObserver<HelloWorldData> helloWorldStream(StreamObserver<HelloWorldData> responseObserver) {
+					System.out.println("Stream opened");
+
 					return new StreamObserver<HelloWorldData>() {
 						@Override
 						public void onNext(HelloWorldData request) {
