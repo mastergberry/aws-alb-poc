@@ -1,6 +1,7 @@
 #include "HelloWorldManager.h"
 
 #include <grpc++/grpc++.h>
+#include <fstream>
 
 HelloWorldManager::HelloWorldManager()
 {
@@ -13,11 +14,30 @@ HelloWorldManager::HelloWorldManager()
     channelArguments.SetInt(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
     channelArguments.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 1);
 
+    // Apparently gRPC with AWS only works with SSL...so we use SSL for this test too
+    SslCredentialsOptions sslCredentialsOptions = SslCredentialsOptions();
+
+    string path = "roots.pem";
+    ifstream file(path);
+
+    if (!file.is_open() || file.bad())
+    {
+        cerr << "Unable to open roots.pem, place roots.pem into same directory as client is being ran from" << endl;
+        return;
+    }
+
+    string tmp((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+
+    sslCredentialsOptions.pem_root_certs = tmp;
+    shared_ptr<ChannelCredentials> channelCredentials = SslCredentials(sslCredentialsOptions);
+
     // Replace this string with the target of the AWS ALB you are testing
-    this->m_channel = CreateCustomChannel("{REPLACE_ME}", InsecureChannelCredentials(), channelArguments);
+    this->m_channel = CreateCustomChannel("{IP_OR_HOSTNAME:PORT}", channelCredentials, channelArguments);
 
     if (this->m_channel != nullptr)
     {
+        this->m_stub = HelloWorldService::NewStub(this->m_channel);
+
         cout << "Starting worker thread" << endl;
         this->m_thread = make_unique<std::thread>(&HelloWorldManager::StreamWorker, this);
     }
@@ -50,6 +70,8 @@ void HelloWorldManager::StreamWorker()
 {
     HelloWorldData request, response;
     Status status;
+
+    request.set_message(R"({"hello": "world"})");
 
     // Infinite loop to reconnect
     while (this->m_alive)

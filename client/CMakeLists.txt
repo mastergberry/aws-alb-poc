@@ -76,6 +76,9 @@ add_custom_command(
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
+# Copy roots.pem into build directory
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/roots.pem DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 add_executable(client
         main.cpp
         HelloWorldManager.h
