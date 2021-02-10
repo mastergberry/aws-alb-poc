@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 include(FetchContent)
 
+if (UNIX AND NOT APPLE)
+    set(BLC_OS "linux")
+    set(LINUX TRUE)
+endif()
+
+
 # Use all of the damn CPU power to compile stuff on MSVC
 if(MSVC)
     include(ProcessorCount)
@@ -22,10 +28,21 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_COMPILE_FLAGS}")
 endif()
 
+if(UNIX)
+    # Avoid some weird compiler warnings with linking
+    # Note to self: These flags are what makes it so Singletons can remain independent and not have a ton of random problems: https://stackoverflow.com/questions/65088485/singleton-in-linux-with-shared-modules-and-static-memory-access
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden -fvisibility=hidden")
+endif()
+
 if (LINUX)
     # -mno-red-zone is to avoid VMP crashes
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -mno-red-zone")
 endif()
+
+if(LINUX)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable -fPIC" FORCE)
+endif()
+
 
 # On Windows we need to set the path to YASM or it won't compile properly...
 if(WIN32)

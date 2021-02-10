@@ -2,6 +2,7 @@
 #define CLIENT_HELLOWORLDMANAGER_H
 
 #include "helloworld.grpc.pb.h"
+#include <thread>
 
 using namespace grpc;
 using namespace helloworld;
